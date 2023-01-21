@@ -3,6 +3,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "gfx/shaders.hpp"
+#include "gfx/buffer.hpp"
+#include "gfx/vertex_attribute.hpp"
+
 void debugMessage(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
                   const GLchar *message, const void *userParam)
 {
@@ -89,11 +93,45 @@ int main() {
 
     #endif
 
+    struct Vertex {
+        float pos[2];
+    };
+
+    Vertex vertices[] = {
+        -0.5, -0.5,
+        -0.5,  0.5,
+         0.5,  0.5,
+         0.5, -0.5
+    };
+
+    uint32_t indices[] = {
+        0, 1, 2, 
+        0, 2, 3
+    };
+
+    gfx::Buffer vertexBuffer{4 * sizeof(Vertex)};
+    vertexBuffer.push(vertices);
+
+    gfx::Buffer indexBuffer{6 * sizeof(uint32_t)};
+    indexBuffer.push(indices);
+
+    gfx::VertexAttribute vertexAttribute;
+    vertexAttribute.attributeLocation(0, 2, 0);
+    vertexAttribute.bindVertexBuffer<Vertex>(vertexBuffer);
+    vertexAttribute.bindElementBuffer(indexBuffer);
+
+    gfx::ShaderProgram shader{};
+    shader.addShader("../shader/test.vert");
+    shader.addShader("../shader/test.frag");
+    shader.link();
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
         // opengl code
+        shader.bind();
+        vertexAttribute.bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
     }
